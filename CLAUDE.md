@@ -44,3 +44,36 @@ sql/schema.sql — read before writing any database-touching code.
 - Type hints on all function signatures
 - Ingestion scripts are idempotent — always check ingestion_log before importing
 - Keep ingestion scripts independent of each other (one file per source type)
+
+## Testing conventions
+
+### Framework
+pytest + pytest-asyncio for all tests.
+
+### Rules
+- Every module gets a test file when the module is created (`src/foo.py` → `tests/test_foo.py`)
+- Every function in a module has at least one test
+- A feature or logic change is not complete until its tests are updated
+
+### Two-tier structure
+
+**Unit/system tests** (`tests/`)
+Isolated — no dependency on external services or persistent state. Database
+tests use a throwaway DB (`lore_test`) created and dropped per session by a
+pytest fixture. Mock external services (Ollama, iMessage chat.db) at this tier.
+Run with: `uv run pytest`
+
+**Integration tests** (`tests/integration/`)
+Full end-to-end against real external services. Use the `lore_integration` DB —
+never the production `lore` DB. Neither tier may depend on or affect the other's
+database state.
+Run with: `uv run pytest tests/integration`
+
+### Database naming
+- `lore` — production (no suffix)
+- `lore_test` — throwaway, created/dropped by unit/system test fixture
+- `lore_integration` — persistent, for integration tests only
+
+### Implementation notes
+- Shared DB fixture lives in `tests/conftest.py` so all test files can reuse it
+- Mock Ollama via `httpx.MockTransport` (not `unittest.mock` patching)
