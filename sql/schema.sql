@@ -102,8 +102,11 @@ CREATE TABLE memories (
     -- Content
     -- -------------------------------------------------------------------------
     body            TEXT NOT NULL,          -- The actual text of this memory
-    body_embedding  vector(768),            -- nomic-embed-text produces 768-dim vectors
-                                            -- NULL until embedding pass is run
+    body_embedding  vector(768),            -- Semantic vector; NULL until embedding pass is run
+    embedding_model TEXT,                   -- Model that produced body_embedding, e.g.
+                                            -- 'nomic-embed-text'. NULL when body_embedding
+                                            -- is NULL. Records provenance so rows can be
+                                            -- selectively re-embedded when a better model ships.
 
     -- -------------------------------------------------------------------------
     -- Chunking
@@ -164,6 +167,9 @@ CREATE INDEX idx_memories_direction   ON memories (direction);
 CREATE INDEX idx_memories_thread_id   ON memories (thread_id);
 CREATE INDEX idx_memories_author_id   ON memories (author_id);
 CREATE INDEX idx_memories_created_at  ON memories (created_at DESC);
+
+-- Embedding model (for selective re-indexing when a better model ships)
+CREATE INDEX idx_memories_embedding_model ON memories (embedding_model);
 
 -- JSONB metadata queries
 CREATE INDEX idx_memories_metadata    ON memories USING gin (metadata);
@@ -242,6 +248,11 @@ CREATE INDEX idx_ingestion_log_ingested_at ON ingestion_log (ingested_at DESC);
 --   SELECT * FROM memories
 --   WHERE  thread_id = $1
 --   ORDER  BY chunk_index;
+
+-- Find rows embedded with a specific model (for re-indexing after model upgrade):
+--   SELECT id, body FROM memories
+--   WHERE  embedding_model = 'nomic-embed-text'
+--   ORDER  BY indexed_at;
 
 -- Combined: semantic search with keyword pre-filter (faster on large corpus):
 --   SELECT id, source_type, author, created_at, body,
