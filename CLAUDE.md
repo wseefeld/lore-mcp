@@ -6,10 +6,11 @@ stores it in PostgreSQL + pgvector, and makes it searchable by any
 MCP-compatible AI client (Claude Desktop, LibreChat, etc.).
 
 ## Design document
-Full architecture, philosophy, and source-type catalog:
-/Users/walt/ObsidianVaults/Walt_Personal/Claude.AI/Active-Projects/Personal-Memory-Archive-Design.md
+Full architecture, philosophy, source-type catalog, and key decisions:
+docs/Personal-Memory-Archive-Design.md
 
-Read this before making architectural decisions.
+Read this before making architectural decisions. The design doc is authoritative;
+do not override schema, source model, or tech stack choices without consulting it.
 
 ## Schema
 sql/schema.sql — read before writing any database-touching code.
@@ -22,22 +23,11 @@ sql/schema.sql — read before writing any database-touching code.
 - DB access: asyncpg
 - MCP server: mcp library
 
-## Key decisions — do not re-litigate
-- Three tables: memories, threads, ingestion_log
-- Source data and embeddings stored separately; embedding_model column
-  records which model produced each vector (enables re-indexing)
-- chunk_index / chunk_count pattern for long content (articles, transcripts)
-- direction field values: sent / received / consumed / internal / recalled
-- metadata JSONB column for source-specific fields (no pre-specified schema)
-- Full-text GIN index alongside semantic ivfflat index
-- MCP server binds to localhost only
-
-## Build order
-1. sql/schema.sql — apply to lore database (already written)
-2. src/ingest_imessage.py — normalize iMessage chat.db → memories schema
-3. src/embed.py — embedding pass over un-embedded rows via Ollama API
-4. src/search.py — CLI semantic + keyword search for local testing
-5. src/server.py — MCP server (tools: search_memory, get_thread_context, list_sources)
+## iMessage contact tiering
+- Contact list: `contacts.toml` (gitignored) — maps phone numbers to display names
+- All conversations ingested by default; listed contacts → `metadata.tier = "high_value"`, others → `"low_value"`
+- `--contacts-only` flag skips low-value tier at ingest time
+- `search_memory` excludes low-value memories by default; `include_low_value=true` to override
 
 ## Coding conventions
 - Async throughout (asyncpg, httpx for Ollama API calls)

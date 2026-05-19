@@ -171,6 +171,11 @@ CREATE INDEX idx_memories_created_at  ON memories (created_at DESC);
 -- Embedding model (for selective re-indexing when a better model ships)
 CREATE INDEX idx_memories_embedding_model ON memories (embedding_model);
 
+-- Idempotency: prevent duplicate ingestion of the same source record
+CREATE UNIQUE INDEX idx_memories_source_unique
+    ON memories (source_type, source_id)
+    WHERE source_id IS NOT NULL;
+
 -- JSONB metadata queries
 CREATE INDEX idx_memories_metadata    ON memories USING gin (metadata);
 

@@ -216,3 +216,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# lore-mcp — personal data (never commit)
+contacts.toml

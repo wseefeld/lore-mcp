@@ -48,6 +48,8 @@ See [schema.sql](../sql/schema.sql) for full DDL with comments.
 
 **Source data and embeddings stored separately** (credit: OB1 pattern). An `embedding_model` column records which model produced each vector, so re-indexing with a better model never requires touching source data.
 
+**iMessage contact tiering.** All conversations are ingested by default — appointment reminders, order confirmations, and other business-SMS traffic have retrospective value even if it's not obvious at ingest time. A contacts list (`contacts.toml`, gitignored) maps phone numbers to display names. Conversations with listed contacts are tagged `metadata->>'tier' = 'high_value'`; all others get `'low_value'`. Pass `--contacts-only` to skip low-value conversations at ingest time, making the list behave as an allow list. `search_memory` excludes low-value memories by default; callers pass `include_low_value=true` to include them. Tagging at ingest is cheap; re-running ingestion to retrofit tags is not.
+
 ---
 
 ## Planned Source Types
@@ -89,8 +91,9 @@ See [schema.sql](../sql/schema.sql) for full DDL with comments.
 Three tools exposed to MCP clients:
 
 ```
-search_memory(query, sources?, date_range?, direction?, limit?)
+search_memory(query, sources?, date_range?, direction?, limit?, include_low_value?)
   → Returns ranked results with thread_title, author, created_at, body excerpt, similarity score
+  → include_low_value defaults to false; low-value (unrecognized contact) memories excluded unless set
 
 get_thread_context(thread_id, around_id?, window?)
   → Returns surrounding messages/chunks for a flagged result
@@ -137,7 +140,7 @@ LibreChat runs in an isolated Docker/Colima environment. The lore-mcp server run
 - [x] Reinstall uv via standalone installer; verify `uv self update` works
 - [x] Create `lore` database
 - [x] Run schema.sql
-- [x] Create lore-mcp GitHub repo under wseefeld account
+- [x] Create lore-mcp GitHub repo 
 - [x] Move schema.sql to repo; update this doc with repo pointer
 
 ### Phase 1 — Foundation

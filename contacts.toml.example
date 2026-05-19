@@ -1,0 +1,13 @@
+# contacts.toml — copy to contacts.toml (gitignored) and fill in your contacts.
+#
+# Maps iMessage handle identifiers to display names. Handles are phone numbers
+# (with country code, as stored in chat.db) or email addresses (for iMessage
+# accounts registered to an email).
+#
+# Conversations involving any listed contact are tagged high_value in metadata.
+# All others are tagged low_value and excluded from search results by default.
+# Run ingest_imessage.py with --contacts-only to skip low-value ingestion entirely.
+
+[contacts]
+"+15551234567" = "Contact Name"
+"someone@example.com" = "Email Contact"
