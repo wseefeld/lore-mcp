@@ -227,3 +227,4 @@ contacts.toml
 .venv/
 node_modules/
 tmp/
+/tmp
