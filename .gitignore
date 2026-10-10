@@ -219,3 +219,11 @@ __marimo__/
 
 # lore-mcp — personal data (never commit)
 contacts.toml
+# added 2026-10-10 before first push to GitHub
+.env.*
+!.env.template
+.DS_Store
+*.pyc
+.venv/
+node_modules/
+tmp/
